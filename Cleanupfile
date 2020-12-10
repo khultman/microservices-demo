@@ -10,7 +10,7 @@ pipeline {
       }
     }
     
-    stage('Deploy Gremlin Shop') {
+    stage('Destroy Gremlin Shop') {
       steps {
         script {
           sh "/usr/local/bin/kubectl delete -f $WORKSPACE/release/kubernetes-manifests.yaml"
