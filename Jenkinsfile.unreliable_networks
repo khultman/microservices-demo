@@ -30,7 +30,7 @@ pipeline {
     stage('Execute Scenario') {
       steps {
         script {
-          SCENATIO_EXECUTION_ID = sh (
+          SCENARIO_EXECUTION_ID = sh (
             script: "curl -s -X POST -H 'Content-Type: application/json' -H 'Authorization: Key ${GREMLIN_API_KEY}' https://api.gremlin.com/v1/scenarios/${UNRELIABLE_NETWORK_SCENARIO}/runs",
             returnStdout: true
           ).trim()
