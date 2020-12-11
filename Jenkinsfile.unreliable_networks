@@ -31,7 +31,7 @@ pipeline {
       steps {
         script {
           SCENARIO_EXECUTION_ID = sh (
-            script: "curl -s -X POST -H 'Content-Type: application/json' -H 'Authorization: Key ${GREMLIN_API_KEY}' https://api.gremlin.com/v1/scenarios/${UNRELIABLE_NETWORK_SCENARIO}/runs",
+            script: "curl -s -X POST -H 'Content-Type: application/json' -H 'Authorization: Key ${GREMLIN_API_KEY}' --data '{\"hypothesis\": \"Scenario Run from Jenkins\"}' https://api.gremlin.com/v1/scenarios/${UNRELIABLE_NETWORK_SCENARIO}/runs",
             returnStdout: true
           ).trim()
           echo "see your scenario at https://app.gremlin.com/scenarios/${SCENARIO_EXECUTION_ID}"
