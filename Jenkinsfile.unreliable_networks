@@ -49,7 +49,7 @@ pipeline {
       steps {
         script {
           if (env.HALT=='yes') {
-            sh "curl -s -X DELETE -H 'Authorization: Key ${GREMLIN_API_KEY}' https://api.gremlin.com/v1/scenarios/${UNRELIABLE_NETWORK_SCENARIO/runs"
+            sh "curl -s -X DELETE -H 'Authorization: Key ${GREMLIN_API_KEY}' https://api.gremlin.com/v1/scenarios/${UNRELIABLE_NETWORK_SCENARIO}/runs"
           }
         }
       }
