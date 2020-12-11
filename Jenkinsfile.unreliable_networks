@@ -50,6 +50,7 @@ pipeline {
         script {
           if (env.HALT=='yes') {
             sh "curl -s -X POST -H 'Authorization: Key ${GREMLIN_API_KEY}' https://api.gremlin.com/v1/scenarios/halt/${UNRELIABLE_NETWORK_SCENARIO}/runs/${SCENARIO_EXECUTION_ID}"
+            error('Scenario Aborted')
           }
         }
       }
