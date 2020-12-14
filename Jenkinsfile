@@ -40,7 +40,7 @@ pipeline {
             script: "curl -s -X POST -H 'Content-Type: application/json' -H 'Authorization: Key ${GREMLIN_API_KEY}' --data '{\"hypothesis\": \"${SCENARIO_HYPOTHESIS}\"}' https://api.gremlin.com/v1/scenarios/${SCENARIO_UUID}/runs",
             returnStdout: true
           ).trim()
-          SCENARIO_RUN_ID = (SCENARIO_RUN_ID =~ /(\d+)/g)[0][1]
+          SCENARIO_RUN_ID = (SCENARIO_RUN_ID =~ /(\d+)/)[0][1]
           echo "see your scenario at https://app.gremlin.com/scenarios/detail/${SCENARIO_UUID}/runs/${SCENARIO_RUN_ID}"
         }
 
