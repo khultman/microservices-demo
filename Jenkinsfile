@@ -45,7 +45,7 @@ pipeline {
 
         script {
           RESPONSE = sh(
-            script: "curl -X GET -H 'Authorization: Key ${GREMLIN_API_KEY}' https://api.gremlin.com/v1/scenarios/detail/${SCENARIO_UUID}/runs/${SCENARIO_RUN_ID}",
+            script: "curl -X GET -H 'Authorization: Key ${GREMLIN_API_KEY}' https://api.gremlin.com/v1/scenarios/${SCENARIO_UUID}/runs/${SCENARIO_RUN_ID}",
             returnStdout: true
           ).trim()
           JSON = readJSON text: RESPONSE
@@ -53,7 +53,7 @@ pipeline {
         ​
           while(LIFECYCLE == "NotStarted" || LIFECYCLE == "Active") {
             RESPONSE = sh(
-              script: "curl -X GET -H 'Authorization: Key ${GREMLIN_API_KEY}' https://api.gremlin.com/v1/scenarios/detail/${SCENARIO_UUID}/runs/${SCENARIO_RUN_ID}",
+              script: "curl -X GET -H 'Authorization: Key ${GREMLIN_API_KEY}' https://api.gremlin.com/v1/scenarios/${SCENARIO_UUID}/runs/${SCENARIO_RUN_ID}",
               returnStdout: true
             ).trim()
             JSON = readJSON text: RESPONSE
