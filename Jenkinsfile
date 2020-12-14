@@ -25,7 +25,7 @@ pipeline {
         git url:'https://github.com/khultman/microservices-demo.git', branch:'master'
       }
     }
-    
+
     stage('Deploy Gremlin Shop') {
       steps {
         script {
@@ -72,9 +72,9 @@ pipeline {
                 ).trim()
                 JSON = readJSON text: RESPONSE
                 LIFECYCLE = JSON.stage_info.stage
-                sleep($SLEEP_INTERVAL)
+                sleep(SLEEP_INTERVAL)
               }
-              echo ${LIFECYCLE}
+              echo LIFECYCLE
               if(LIFECYCLE == "HaltRequested" || LIFECYCLE == "Halted") {
                 error "Scenario Halted"
               }
