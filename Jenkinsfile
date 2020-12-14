@@ -4,11 +4,17 @@ pipeline {
 
   environment {
     GREMLIN_API_KEY = credentials('gremlin-api-key')
-    SCENARIO_EXECUTION_ID = ''
+    SCENARIO_RUN_ID = ''
   }
 
   parameters {
-    string(name: 'UNRELIABLE_NETWORK_SCENARIO', defaultValue: '522ceaff-995f-43f4-acea-ff995f03f44e', description: 'UUID Of Scenario: Unreliable Network')
+    /*
+     * Unreliable Networks:                                    522ceaff-995f-43f4-acea-ff995f03f44e
+     * Unavailable Dependency - Currency/Ad/Email:             58ea876e-f74f-4af9-aa87-6ef74f6af927
+     * Unavailable Dependency - Recommendation/Payment/Cart:   fd5c8763-1d28-47b8-9c87-631d2877b8f6
+    */
+    string(name: 'SCENARIO_UUID', defaultValue: '522ceaff-995f-43f4-acea-ff995f03f44e', description: 'UUID Of Scenario')
+    string(name: 'SCENARIO_HYPOTHESIS', defaultValue: 'Automated scenario run from Jenkins')
   }
 
   stages {
@@ -27,18 +33,36 @@ pipeline {
       }
     }
 
-    stage('Execute Scenario') {
+    stage('Execute Gremlin Scenario') {
       steps {
         script {
-          SCENARIO_EXECUTION_ID = sh (
-            script: "curl -s -X POST -H 'Content-Type: application/json' -H 'Authorization: Key ${GREMLIN_API_KEY}' --data '{\"hypothesis\": \"Scenario Run from Jenkins\"}' https://api.gremlin.com/v1/scenarios/${UNRELIABLE_NETWORK_SCENARIO}/runs",
+          SCENARIO_RUN_ID = sh (
+            script: "curl -s -X POST -H 'Content-Type: application/json' -H 'Authorization: Key ${GREMLIN_API_KEY}' --data '{\"hypothesis\": \"${SCENARIO_HYPOTHESIS}\"}' https://api.gremlin.com/v1/scenarios/${SCENARIO_UUID}/runs",
             returnStdout: true
           ).trim()
-          echo "see your scenario at https://app.gremlin.com/scenarios/detail/${UNRELIABLE_NETWORK_SCENARIO}/${SCENARIO_EXECUTION_ID}"
+          echo "see your scenario at https://app.gremlin.com/scenarios/detail/${SCENARIO_UUID}/${SCENARIO_RUN_ID}"
+        }
+
+        script {
+          def response = sh(script: "curl -X GET 'https://api.gremlin.com/v1/scenarios/${SCENARIO_UUID}/runs/${SCENARIO_RUN_ID}' -H 'Authorization: Key ${GREMLIN_API_KEY}'", returnStdout: true).trim()
+          def jsonObj = readJSON text: response
+          def lifecycle = jsonObj.graph.nodes.concurrentNode.state.lifecycle
+        ​
+          while(lifecycle == "NotStarted" || lifecycle == "Active") {
+            response = sh(script: "curl -X GET 'https://api.gremlin.com/v1/scenarios/${SCENARIO_UUID}/runs/${SCENARIO_RUN_ID}' -H 'Authorization: Key ${GREMLIN_API_KEY}'", returnStdout: true).trim()
+            jsonObj = readJSON text: response
+            lifecycle = jsonObj.graph.nodes.concurrentNode.state.lifecycle
+            sleep(1)
+          }
+          echo lifecycle
+          if(lifecycle == "HaltRequested") {
+            error "Scenario Halted"
+          }
         }
       }
     }
 
+    /*
     stage('Observce and Halt') {
       input {
         message 'Do you want to halt scenario?'
@@ -49,13 +73,13 @@ pipeline {
       steps {
         script {
           if (env.HALT=='yes') {
-            sh "curl -s -X POST -H 'Authorization: Key ${GREMLIN_API_KEY}' https://api.gremlin.com/v1/scenarios/halt/${UNRELIABLE_NETWORK_SCENARIO}/runs/${SCENARIO_EXECUTION_ID}"
+            sh "curl -s -X POST -H 'Authorization: Key ${GREMLIN_API_KEY}' https://api.gremlin.com/v1/scenarios/halt/${SCENARIO_UUID}/runs/${SCENARIO_RUN_ID}"
             error('Scenario Aborted')
           }
         }
       }
     }
-
+    */
   }
 
 }
