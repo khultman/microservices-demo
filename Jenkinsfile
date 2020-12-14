@@ -49,6 +49,7 @@ pipeline {
             returnStdout: true
           ).trim()
           JSON = readJSON text: RESPONSE
+          echo ${JSON}
           LIFECYCLE = JSON.graph.nodes.concurrentNode.state.lifecycle
         ​
           while(LIFECYCLE == "NotStarted" || LIFECYCLE == "Active") {
