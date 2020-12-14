@@ -50,7 +50,7 @@ pipeline {
             returnStdout: true
           ).trim()
           JSON = readJSON text: RESPONSE
-          //echo JSON.toString()
+          echo JSON.toString()
           LIFECYCLE = JSON.graph.nodes.concurrentNode.state.lifecycle
         ​
           while(LIFECYCLE == "NotStarted" || LIFECYCLE == "Active") {
