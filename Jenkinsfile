@@ -46,7 +46,7 @@ pipeline {
         script {
           RESPONSE = sh(
             script: "curl -X GET -H 'Authorization: Key ${GREMLIN_API_KEY}' https://api.gremlin.com/v1/scenarios/detail/${SCENARIO_UUID}/runs/${SCENARIO_RUN_ID}",
-            returnStdout:
+            returnStdout: true
           ).trim()
           JSON = readJSON text: RESPONSE
           LIFECYCLE = JSON.graph.nodes.concurrentNode.state.lifecycle
