@@ -1,4 +1,4 @@
-## execution:
+execution:
 - concurrency: 100
   hold-for: 5m
   ramp-up: 10s
