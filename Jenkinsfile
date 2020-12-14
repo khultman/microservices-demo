@@ -44,18 +44,24 @@ pipeline {
         }
 
         script {
-          def response = sh(script: "curl -X GET 'https://api.gremlin.com/v1/scenarios/${SCENARIO_UUID}/runs/${SCENARIO_RUN_ID}' -H 'Authorization: Key ${GREMLIN_API_KEY}'", returnStdout: true).trim()
-          def jsonObj = readJSON text: response
-          def lifecycle = jsonObj.graph.nodes.concurrentNode.state.lifecycle
+          RESPONSE = sh(
+            script: "curl -X GET -H 'Authorization: Key ${GREMLIN_API_KEY}' https://api.gremlin.com/v1/scenarios/detail/${SCENARIO_UUID}/runs/${SCENARIO_RUN_ID}",
+            returnStdout:
+          ).trim()
+          JSON = readJSON text: RESPONSE
+          LIFECYCLE = JSON.graph.nodes.concurrentNode.state.lifecycle
         ​
           while(lifecycle == "NotStarted" || lifecycle == "Active") {
-            response = sh(script: "curl -X GET 'https://api.gremlin.com/v1/scenarios/${SCENARIO_UUID}/runs/${SCENARIO_RUN_ID}' -H 'Authorization: Key ${GREMLIN_API_KEY}'", returnStdout: true).trim()
-            jsonObj = readJSON text: response
-            lifecycle = jsonObj.graph.nodes.concurrentNode.state.lifecycle
+            RESPONSE = sh(
+              script: "curl -X GET -H 'Authorization: Key ${GREMLIN_API_KEY}' https://api.gremlin.com/v1/scenarios/detail/${SCENARIO_UUID}/runs/${SCENARIO_RUN_ID}",
+              returnStdout: true
+            ).trim()
+            JSON = readJSON text: RESPONSE
+            LIFECYCLE = JSON.graph.nodes.concurrentNode.state.lifecycle
             sleep(1)
           }
-          echo lifecycle
-          if(lifecycle == "HaltRequested") {
+          echo ${LIFECYCLE}
+          if(LIFECYCLE == "HaltRequested") {
             error "Scenario Halted"
           }
         }
