@@ -1,6 +1,6 @@
 execution:
 - concurrency: 100
-  hold-for: 5m
+  hold-for: 135s
   ramp-up: 10s
   scenario: Thread Group
 scenarios:

@@ -34,46 +34,53 @@ pipeline {
     }
 
     stage('Execute Gremlin Scenario') {
-      steps {
-
-        // Initiate the Loadtest
-        script{
-          sh '/usr/bin/python3 -m bzt.cli ${WORKSPACE}/loadtest.yml -report'
+      parallel {
+        stage('Loadtest') {
+          steps {
+            // Initiate the Loadtest
+            script{
+              sh '/usr/bin/python3 -m bzt.cli ${WORKSPACE}/loadtest.yml -report'
+            }
+          }
         }
 
-        // Initiate the Gremlin Scenario
-        script {
-          SCENARIO_RUN_ID = sh (
-            script: "curl -s -X POST -H 'Content-Type: application/json' -H 'Authorization: Key ${GREMLIN_API_KEY}' --data '{\"hypothesis\": \"${SCENARIO_HYPOTHESIS}\"}' https://api.gremlin.com/v1/scenarios/${SCENARIO_UUID}/runs",
-            returnStdout: true
-          ).trim()
-          SCENARIO_RUN_ID = (SCENARIO_RUN_ID =~ /(\d+)/)[0][1]
-          echo "see your scenario at https://app.gremlin.com/scenarios/detail/${SCENARIO_UUID}/runs/${SCENARIO_RUN_ID}"
-        }
+        stage('Gremlin') {
+          steps {
+            // Initiate the Gremlin Scenario
+            script {
+              SCENARIO_RUN_ID = sh (
+                script: "curl -s -X POST -H 'Content-Type: application/json' -H 'Authorization: Key ${GREMLIN_API_KEY}' --data '{\"hypothesis\": \"${SCENARIO_HYPOTHESIS}\"}' https://api.gremlin.com/v1/scenarios/${SCENARIO_UUID}/runs",
+                returnStdout: true
+              ).trim()
+              SCENARIO_RUN_ID = (SCENARIO_RUN_ID =~ /(\d+)/)[0][1]
+              echo "see your scenario at https://app.gremlin.com/scenarios/detail/${SCENARIO_UUID}/runs/${SCENARIO_RUN_ID}"
+            }
 
-        // Follow the Gremlin Scenario to ensure it wasn't halted or failed
-        script {
-          RESPONSE = sh(
-            script: "curl -X GET -H 'Authorization: Key ${GREMLIN_API_KEY}' https://api.gremlin.com/v1/scenarios/${SCENARIO_UUID}/runs/${SCENARIO_RUN_ID}",
-            returnStdout: true
-          ).trim()
-          JSON = readJSON text: RESPONSE
-          LIFECYCLE = JSON.stage_info.stage
-          while(LIFECYCLE == "NotStarted" || LIFECYCLE == "Active") {
-            RESPONSE = sh(
-              script: "curl -X GET -H 'Authorization: Key ${GREMLIN_API_KEY}' https://api.gremlin.com/v1/scenarios/${SCENARIO_UUID}/runs/${SCENARIO_RUN_ID}",
-              returnStdout: true
-            ).trim()
-            JSON = readJSON text: RESPONSE
-            LIFECYCLE = JSON.stage_info.stage
-            sleep(1)
-          }
-          echo ${LIFECYCLE}
-          if(LIFECYCLE == "HaltRequested" || LIFECYCLE == "Halted") {
-            error "Scenario Halted"
-          }
-          if(LIFECYCLE == "Failed") {
-            error "Scenario Failed: " + JSON.stage_info.stageMetadata.failedReason
+            // Follow the Gremlin Scenario to ensure it wasn't halted or failed
+            script {
+              RESPONSE = sh(
+                script: "curl -X GET -H 'Authorization: Key ${GREMLIN_API_KEY}' https://api.gremlin.com/v1/scenarios/${SCENARIO_UUID}/runs/${SCENARIO_RUN_ID}",
+                returnStdout: true
+              ).trim()
+              JSON = readJSON text: RESPONSE
+              LIFECYCLE = JSON.stage_info.stage
+              while(LIFECYCLE == "NotStarted" || LIFECYCLE == "Active") {
+                RESPONSE = sh(
+                  script: "curl -X GET -H 'Authorization: Key ${GREMLIN_API_KEY}' https://api.gremlin.com/v1/scenarios/${SCENARIO_UUID}/runs/${SCENARIO_RUN_ID}",
+                  returnStdout: true
+                ).trim()
+                JSON = readJSON text: RESPONSE
+                LIFECYCLE = JSON.stage_info.stage
+                sleep(1)
+              }
+              echo ${LIFECYCLE}
+              if(LIFECYCLE == "HaltRequested" || LIFECYCLE == "Halted") {
+                error "Scenario Halted"
+              }
+              if(LIFECYCLE == "Failed") {
+                error "Scenario Failed: " + JSON.stage_info.stageMetadata.failedReason
+              }
+            }
           }
         }
       }
