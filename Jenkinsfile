@@ -80,7 +80,7 @@ pipeline {
               }
 
               if(LIFECYCLE == "HaltRequested" || LIFECYCLE == "Halted") {
-                error "Scenario Halted"
+                error "Scenario Halted, check https://api.gremlin.com/v1/scenarios/${SCENARIO_UUID}/runs/${SCENARIO_RUN_ID} for errors"
               }
               if(LIFECYCLE == "Failed") {
                 error "Scenario Failed: " + JSON.stage_info.stageMetadata.failedReason
