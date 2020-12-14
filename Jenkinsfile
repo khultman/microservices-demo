@@ -75,7 +75,7 @@ pipeline {
                 ).trim()
                 JSON = readJSON text: RESPONSE
                 LIFECYCLE = JSON.stage_info.stage
-                sleep(5)
+                sleep(1)
               }
 
               if(LIFECYCLE == "HaltRequested" || LIFECYCLE == "Halted") {
