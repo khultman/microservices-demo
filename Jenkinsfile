@@ -35,6 +35,13 @@ pipeline {
 
     stage('Execute Gremlin Scenario') {
       steps {
+
+        // Initiate the Loadtest
+        script{
+          sh '/usr/bin/python3 -m bzt.cli ${WORKSPACE}/loadtest.yml -report'
+        }
+
+        // Initiate the Gremlin Scenario
         script {
           SCENARIO_RUN_ID = sh (
             script: "curl -s -X POST -H 'Content-Type: application/json' -H 'Authorization: Key ${GREMLIN_API_KEY}' --data '{\"hypothesis\": \"${SCENARIO_HYPOTHESIS}\"}' https://api.gremlin.com/v1/scenarios/${SCENARIO_UUID}/runs",
@@ -44,52 +51,33 @@ pipeline {
           echo "see your scenario at https://app.gremlin.com/scenarios/detail/${SCENARIO_UUID}/runs/${SCENARIO_RUN_ID}"
         }
 
+        // Follow the Gremlin Scenario to ensure it wasn't halted or failed
         script {
           RESPONSE = sh(
             script: "curl -X GET -H 'Authorization: Key ${GREMLIN_API_KEY}' https://api.gremlin.com/v1/scenarios/${SCENARIO_UUID}/runs/${SCENARIO_RUN_ID}",
             returnStdout: true
           ).trim()
           JSON = readJSON text: RESPONSE
-          echo JSON.toString()
-
-          if(JSON.graph.nodes.keySet().contains('concurrentNode')) {
-            LIFECYCLE = JSON.graph.nodes.concurrentNode.state.lifecycle
-            while(LIFECYCLE == "NotStarted" || LIFECYCLE == "Active") {
-              RESPONSE = sh(
-                script: "curl -X GET -H 'Authorization: Key ${GREMLIN_API_KEY}' https://api.gremlin.com/v1/scenarios/${SCENARIO_UUID}/runs/${SCENARIO_RUN_ID}",
-                returnStdout: true
-              ).trim()
-              JSON = readJSON text: RESPONSE
-              LIFECYCLE = JSON.graph.nodes.concurrentNode.state.lifecycle
-              sleep(1)
-            }
-            echo ${LIFECYCLE}
-            if(LIFECYCLE == "HaltRequested") {
-              error "Scenario Halted"
-            }
+          LIFECYCLE = JSON.stage_info.stage
+          while(LIFECYCLE == "NotStarted" || LIFECYCLE == "Active") {
+            RESPONSE = sh(
+              script: "curl -X GET -H 'Authorization: Key ${GREMLIN_API_KEY}' https://api.gremlin.com/v1/scenarios/${SCENARIO_UUID}/runs/${SCENARIO_RUN_ID}",
+              returnStdout: true
+            ).trim()
+            JSON = readJSON text: RESPONSE
+            LIFECYCLE = JSON.stage_info.stage
+            sleep(1)
+          }
+          echo ${LIFECYCLE}
+          if(LIFECYCLE == "HaltRequested" || LIFECYCLE == "Halted") {
+            error "Scenario Halted"
+          }
+          if(LIFECYCLE == "Failed") {
+            error "Scenario Failed: " + JSON.stage_info.stageMetadata.failedReason
           }
         }
       }
     }
-
-    /*
-    stage('Observce and Halt') {
-      input {
-        message 'Do you want to halt scenario?'
-        parameters {
-          choice(choices: ['yes', 'no'], name: 'HALT', description: '')
-        }
-      }
-      steps {
-        script {
-          if (env.HALT=='yes') {
-            sh "curl -s -X POST -H 'Authorization: Key ${GREMLIN_API_KEY}' https://api.gremlin.com/v1/scenarios/halt/${SCENARIO_UUID}/runs/${SCENARIO_RUN_ID}"
-            error('Scenario Aborted')
-          }
-        }
-      }
-    }
-    */
   }
 
 }

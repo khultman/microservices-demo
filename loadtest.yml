@@ -1,12 +1,12 @@
 ## execution:
 - concurrency: 100
-  hold-for: 10m
-  ramp-up: 60s
+  hold-for: 5m
+  ramp-up: 10s
   scenario: Thread Group
 scenarios:
   Thread Group:
     requests:
-    - label: blazedemo
+    - label: Jankyshop
       method: GET
-      url: http://blazedemo.com/
+      url: http://jankyshop.gremlin.rocks/
 
