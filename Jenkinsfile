@@ -33,7 +33,7 @@ pipeline {
       }
     }
 
-    stage('Execute Gremlin Scenario') {
+    stage('Execute Loadtest & Gremlin Scenario') {
       parallel {
         stage('Loadtest') {
           steps {
@@ -71,15 +71,17 @@ pipeline {
                 ).trim()
                 JSON = readJSON text: RESPONSE
                 LIFECYCLE = JSON.stage_info.stage
-                sleep(10)
+                sleep(5)
               }
-              echo LIFECYCLE
+
               if(LIFECYCLE == "HaltRequested" || LIFECYCLE == "Halted") {
                 error "Scenario Halted"
               }
               if(LIFECYCLE == "Failed") {
                 error "Scenario Failed: " + JSON.stage_info.stageMetadata.failedReason
               }
+
+              echo LIFECYCLE
             }
           }
         }
