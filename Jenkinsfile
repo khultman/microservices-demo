@@ -68,14 +68,14 @@ pipeline {
               JSON = readJSON text: RESPONSE
               LIFECYCLE = JSON.stage_info.stage
 
-              while(LIFECYCLE == "NotStarted" || LIFECYCLE == "Active") {
+              while(LIFECYCLE == "NotStarted" || LIFECYCLE == "Setup" || LIFECYCLE == "Active") {
                 RESPONSE = sh(
                   script: "curl -X GET -H 'Authorization: Key ${GREMLIN_API_KEY}' https://api.gremlin.com/v1/scenarios/${SCENARIO_UUID}/runs/${SCENARIO_RUN_ID}",
                   returnStdout: true
                 ).trim()
                 JSON = readJSON text: RESPONSE
                 LIFECYCLE = JSON.stage_info.stage
-                sleep(1)
+                sleep(5)
               }
 
               if(LIFECYCLE == "HaltRequested" || LIFECYCLE == "Halted") {
