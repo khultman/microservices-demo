@@ -51,20 +51,22 @@ pipeline {
           ).trim()
           JSON = readJSON text: RESPONSE
           echo JSON.toString()
-          LIFECYCLE = JSON.graph.nodes.concurrentNode.state.lifecycle
-        ​
-          while(LIFECYCLE == "NotStarted" || LIFECYCLE == "Active") {
-            RESPONSE = sh(
-              script: "curl -X GET -H 'Authorization: Key ${GREMLIN_API_KEY}' https://api.gremlin.com/v1/scenarios/${SCENARIO_UUID}/runs/${SCENARIO_RUN_ID}",
-              returnStdout: true
-            ).trim()
-            JSON = readJSON text: RESPONSE
+
+          if(JSON.graph.nodes.keySet().contains('concurrentNode')) {
             LIFECYCLE = JSON.graph.nodes.concurrentNode.state.lifecycle
-            sleep(1)
-          }
-          echo ${LIFECYCLE}
-          if(LIFECYCLE == "HaltRequested") {
-            error "Scenario Halted"
+            while(LIFECYCLE == "NotStarted" || LIFECYCLE == "Active") {
+              RESPONSE = sh(
+                script: "curl -X GET -H 'Authorization: Key ${GREMLIN_API_KEY}' https://api.gremlin.com/v1/scenarios/${SCENARIO_UUID}/runs/${SCENARIO_RUN_ID}",
+                returnStdout: true
+              ).trim()
+              JSON = readJSON text: RESPONSE
+              LIFECYCLE = JSON.graph.nodes.concurrentNode.state.lifecycle
+              sleep(1)
+            }
+            echo ${LIFECYCLE}
+            if(LIFECYCLE == "HaltRequested") {
+              error "Scenario Halted"
+            }
           }
         }
       }
