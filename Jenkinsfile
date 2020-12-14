@@ -5,6 +5,7 @@ pipeline {
   environment {
     GREMLIN_API_KEY = credentials('gremlin-api-key')
     SCENARIO_RUN_ID = ''
+    SLEEP_INTERVAL = 10
   }
 
   parameters {
@@ -71,7 +72,7 @@ pipeline {
                 ).trim()
                 JSON = readJSON text: RESPONSE
                 LIFECYCLE = JSON.stage_info.stage
-                sleep(1)
+                sleep($SLEEP_INTERVAL)
               }
               echo ${LIFECYCLE}
               if(LIFECYCLE == "HaltRequested" || LIFECYCLE == "Halted") {
