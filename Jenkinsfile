@@ -11,7 +11,7 @@ pipeline {
   parameters {
     /*
      * Unreliable Networks:                                    522ceaff-995f-43f4-acea-ff995f03f44e
-     * Unavailable Dependency - Currency/Ad/Email:             58ea876e-f74f-4af9-aa87-6ef74f6af927
+     * Unavailable Dependency - Currency/Email:                58ea876e-f74f-4af9-aa87-6ef74f6af927
      * Unavailable Dependency - Recommendation/Payment/Cart:   fd5c8763-1d28-47b8-9c87-631d2877b8f6
     */
     string(name: 'SCENARIO_UUID', defaultValue: '522ceaff-995f-43f4-acea-ff995f03f44e', description: 'UUID Of Scenario')
